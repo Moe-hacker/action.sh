@@ -1,7 +1,7 @@
 #!/bin/sh
-BASE_COLOR="\033[38;2;254;228;208m"
 debug() {
-    # $@: debug message
+    #
+    # $*: debug message
     #
     # print the debug message
     # This need $DEBUG is set.
@@ -9,51 +9,56 @@ debug() {
         return
     fi
     echo
-    if [ "x$@" = "x" ]; then
+    if [ "x$*" = "x" ]; then
         echo "\033[33mdebug: \033[0m"
     else
-        echo "\033[33m$@\033[0m"
+        echo "\033[33m$*\033[0m"
     fi
 }
 error() {
-    # $@: error message
+    #
+    # $*: error message
     #
     # print the error message and exit with error
-    echo "\033[31m$@\033[0m"
+    echo "\033[31m$*\033[0m"
     echo "\033[31mWe got an error, please check the error message above.\033[0m"
     exit 1
 }
 ok() {
-    # $@: ok message
+    #
+    # $*: ok message
     #
     # print the ok message
-    if [ "x$@" = "x" ]; then
+    if [ "x$*" = "x" ]; then
         echo "\033[32mok\033[0m"
     else
-        echo "\033[32m$@\033[0m"
+        echo "\033[32m$*\033[0m"
     fi
 }
 not_ok() {
-    # $@: not ok message
+    #
+    # $*: not ok message
     #
     # print the not ok message
-    if [ "x$@" = "x" ]; then
+    if [ "x$*" = "x" ]; then
         echo "\033[33mno\033[0m"
     else
-        echo "\033[33m$@\033[0m"
+        echo "\033[33m$*\033[0m"
     fi
 }
 info() {
-    # $@: info message
+    #
+    # $*: info message
     #
     # print the info message
-    if [ "x$@" = "x" ]; then
+    if [ "x$*" = "x" ]; then
         printf "${BASE_COLOR}info: \033[0m"
     else
-        printf "${BASE_COLOR}$@\033[0m"
+        printf "${BASE_COLOR}$*\033[0m"
     fi
 }
 check_tool() {
+    #
     # $1: tool command
     # $2: var name
     #
@@ -80,8 +85,10 @@ check_tool() {
             error "not found (as preset by user)"
         fi
     fi
+    debug "$2 is set to \"$(eval echo \$$2)\""
 }
 test_and_add_cflag() {
+    #
     # $1: compiler
     # $2: flag
     # $3: libs
@@ -105,8 +112,10 @@ test_and_add_cflag() {
     else
         not_ok
     fi
+    debug "$TEMP_VAR is set to \"$(eval echo \$$TEMP_VAR)\""
 }
 test_and_add_lib() {
+    #
     # $1: compiler
     # $2: flag
     # $3: compiler flag
@@ -130,8 +139,10 @@ test_and_add_lib() {
     else
         not_ok
     fi
+    debug "$TEMP_VAR is set to \"$(eval echo \$$TEMP_VAR)\""
 }
 check_and_add_cflag() {
+    #
     # $1: compiler
     # $2: flag
     # $3: libs
@@ -150,14 +161,16 @@ check_and_add_cflag() {
     else
         error "no"
     fi
+    debug "$TEMP_VAR is set to \"$(eval echo \$$TEMP_VAR)\""
 }
 check_and_add_lib() {
+    #
     # $1: compiler
     # $2: flag
     # $3: compiler flag
     # $4: var name
     #
-    # Same as test_and_add_lib, but will exit if the flag is not supported
+    # same as test_and_add_lib, but will exit if the flag is not supported
     TEMP_CC="$1"
     TEMP_LIB="$2"
     TEMP_CFLAG="$3"
@@ -170,8 +183,10 @@ check_and_add_lib() {
     else
         error "no"
     fi
+    debug "$TEMP_VAR is set to \"$(eval echo \$$TEMP_VAR)\""
 }
 check_header() {
+    #
     # $1: compiler
     # $2 header
     # $3: CFLAGS
@@ -181,7 +196,7 @@ check_header() {
     # if not, exit with error
     # for example:
     # check_header "stdio.h"
-    # If the header is not found, it will exit with error
+    # if the header is not found, it will exit with error
     TEMP_CC="$1"
     TEMP_HEADER="$2"
     TEMP_CFLAGS="$3"
@@ -195,5 +210,38 @@ check_header() {
         error "no"
     fi
 }
+git_push() {
+    while true; do
+        printf "\033[34m[0] show diff\033[0m\n"
+        printf "\033[34m[1] push\033[0m\n"
+        printf "\033[34m[2] exit\033[0m\n"
+        read -p "> " select
+        case $select in
+        "0")
+            git diff --color=always HEAD
+            ;;
+        "1")
+            printf "\033[32mEnter commit message \033[0m\n"
+            read -p "> " MESSAGE
+            git_hook || true
+            git add .
+            git commit -m "$MESSAGE"
+            git push
+            ;;
+        "2")
+            exit 0
+            ;;
+        *)
+            echo "Invalid option"
+            exit 1
+            ;;
+        esac
+    done
+}
+if [ "x$BASE_COLOR" = "x" ]; then
+    export BASE_COLOR="\033[38;2;254;228;208m"
+fi
 . ./function.sh
-configure
+if [ "$1" = "push" ]; then
+    git_push
+fi
