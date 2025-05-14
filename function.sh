@@ -54,7 +54,7 @@ check_libs() {
     test_and_add_lib "${CC}" "-lcap" "${LIBS}" LIBS
 }
 git_hook() {
-    info "run shfmt for shell scripts"
+    info "run shfmt for shell scripts\n"
     shfmt -w -i 4 *.sh
 }
 configure() {

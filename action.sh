@@ -210,23 +210,41 @@ check_header() {
         error "no"
     fi
 }
+builtin_read() {
+    #
+    # $1: prompt
+    # $2: var name
+    #
+    # read a line from stdin
+    # if the line is empty, exit with error
+    # for example:
+    # builtin_read "Enter your name: "
+    # if the user enter nothing, it will exit with error
+    printf "$1"
+    read LINE
+    if [ "x$LINE" = "x" ]; then
+        error "no input"
+    fi
+    export $2="$LINE"
+}
 git_push() {
     while true; do
         printf "\033[34m[0] show diff\033[0m\n"
         printf "\033[34m[1] push\033[0m\n"
         printf "\033[34m[2] exit\033[0m\n"
-        read -p "> " select
+        builtin_read "\033[32m> " select
         case $select in
         "0")
             git diff --color=always HEAD
             ;;
         "1")
-            printf "\033[32mEnter commit message \033[0m\n"
-            read -p "> " MESSAGE
+            printf "\033[34mEnter commit message \033[0m\n"
+            builtin_read "\033[32m> " MESSAGE
             git_hook || true
             git add .
             git commit -m "$MESSAGE"
             git push
+            exit 0
             ;;
         "2")
             exit 0
