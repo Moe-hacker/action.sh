@@ -228,6 +228,9 @@ builtin_read() {
     export $2="$LINE"
 }
 git_push() {
+    #
+    # It will call git_hook, which is defined in another file
+    #
     while true; do
         printf "\033[34m[0] show diff\033[0m\n"
         printf "\033[34m[1] push\033[0m\n"
@@ -262,24 +265,6 @@ git_push() {
 
 . ./function.sh
 
-main() {
-    if [ "x$BASE_COLOR" = "x" ]; then
-        export BASE_COLOR="\033[38;2;254;228;208m"
-    fi
-    case $1 in
-    "push")
-        git_push
-        ;;
-    "configure")
-        shift
-        configure $*
-        ;;
-    "format")
-        format
-        ;;
-    esac
-
-}
 # script starts here
 main "$@"
 return $?
