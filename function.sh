@@ -1,11 +1,11 @@
-init() {
+__init() {
     check_tool "cc" "CC"
     check_tool "strip" "STRIP"
     if [ -e ".git" ]; then
         check_tool "git" "GIT"
     fi
 }
-default_cflags() {
+__default_cflags() {
     check_and_add_cflag "${CC}" "-std=gnu11" "${LIBS}" CFLAGS
     test_and_add_cflag "${CC}" "-ftrivial-auto-var-init=pattern" "${LIBS}" CFLAGS
     test_and_add_cflag "${CC}" "-fcf-protection=full" "${LIBS}" CFLAGS
@@ -28,7 +28,7 @@ default_cflags() {
     test_and_add_cflag "${CC}" "-Wl,--disable-new-dtags" "${LIBS}" CFLAGS
     test_and_add_cflag "${CC}" "-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -D_FILE_OFFSET_BITS=64" "${LIBS}" CFLAGS
 }
-dev_cflags() {
+__dev_cflags() {
     check_and_add_cflag "${CC}" "-std=gnu11" "${LIBS}" CFLAGS
     test_and_add_cflag "${CC}" "-g" "${LIBS}" CFLAGS
     test_and_add_cflag "${CC}" "-O0" "${LIBS}" CFLAGS
@@ -48,20 +48,29 @@ dev_cflags() {
     test_and_add_cflag "${CC}" "-fdata-sections" "${LIBS}" CFLAGS
     test_and_add_cflag "${CC}" "-Wl,--gc-sections" "${LIBS}" CFLAGS
 }
-check_libs() {
+__check_libs() {
     test_and_add_lib "${CC}" "-lpthread" "${LIBS}" LIBS
     check_and_add_lib "${CC}" "-lseccomp" "${LIBS}" LIBS
     test_and_add_lib "${CC}" "-lcap" "${LIBS}" LIBS
 }
-git_hook() {
+
+format() {
     info "run shfmt for shell scripts\n"
     shfmt -w -i 4 *.sh
 }
+git_hook() {
+    format
+    builtin_read "\033[32mReally? (y/n) \033[0m" DOIT
+    if [ "x$DOIT" != "xy" ]; then
+        return 1
+    fi
+    return 0
+}
 configure() {
-    init
-    default_cflags
-    dev_cflags
-    check_libs
+    __init
+    __default_cflags
+    __dev_cflags
+    __check_libs
     echo "CFLAGS: ${CFLAGS}"
     echo "LIBS: ${LIBS}"
 }

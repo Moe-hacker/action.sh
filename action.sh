@@ -240,7 +240,10 @@ git_push() {
         "1")
             printf "\033[34mEnter commit message \033[0m\n"
             builtin_read "\033[32m> " MESSAGE
-            git_hook || true
+            git_hook
+            if [ $? -ne 0 ]; then
+                continue
+            fi
             git add .
             git commit -m "$MESSAGE"
             git push
@@ -256,10 +259,27 @@ git_push() {
         esac
     done
 }
-if [ "x$BASE_COLOR" = "x" ]; then
-    export BASE_COLOR="\033[38;2;254;228;208m"
-fi
+
 . ./function.sh
-if [ "$1" = "push" ]; then
-    git_push
-fi
+
+main() {
+    if [ "x$BASE_COLOR" = "x" ]; then
+        export BASE_COLOR="\033[38;2;254;228;208m"
+    fi
+    case $1 in
+    "push")
+        git_push
+        ;;
+    "configure")
+        shift
+        configure $*
+        ;;
+    "format")
+        format
+        ;;
+    esac
+
+}
+# script starts here
+main "$@"
+return $?
